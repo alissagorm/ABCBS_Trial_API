@@ -1,0 +1,414 @@
+---
+openapi: 3.0.0
+info:
+  title: Enterprise Provider API
+  description: Enterprise Provider API
+  contact:
+    email: apitechsupport@arkbluecross.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+- url: https://virtserver.swaggerhub.com/ABCBS/Provider/1.0.0
+  description: SwaggerHub API Auto Mocking
+paths:
+  /providers/eft-enrollment:
+    post:
+      description: "Providers enroll in EFT through Availity. Availity will call this API to submit the provider's EFT information to ABCBS. \n"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EftEnrollmentRequest'
+      responses:
+        "201":
+          description: see status code and description
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EftEnrollmentResponse'
+        "400":
+          description: Validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                title: Unauthorized request.
+                status: 401
+                traceId: 9f4284cb-e598-4810-9077-abc0312c1b02
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                title: Forbidden request.
+                status: 403
+                traceId: 9f4284cb-e598-4810-9077-abc0312c1b02
+        "404":
+          description: No content
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                title: An error occured while processing your request.
+                status: 500
+                traceId: 9f4284cb-e598-4810-9077-abc0312c1b02
+  /providers/fee-schedule:
+    get:
+      parameters:
+      - name: scheduleType
+        in: query
+        description: |
+          Professional or Facility.
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+        example: Professional
+      - name: serviceDate
+        in: query
+        description: |
+          Date of service, format = MM/DD/YYYY.
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+        example: 06/02/2022
+      - name: procedureCode
+        in: query
+        description: |
+          Procedure code.
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+        example: "10060"
+      - name: modifier
+        in: query
+        description: |
+          Optional. A modifier that applies to the procedure.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+        example: "00"
+      responses:
+        "200":
+          description: search results matching criteria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeeScheduleResponse'
+        "400":
+          description: Validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                title: Unauthorized request.
+                status: 401
+                traceId: 9f4284cb-e598-4810-9077-abc0312c1b02
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                title: Forbidden request.
+                status: 403
+                traceId: 9f4284cb-e598-4810-9077-abc0312c1b02
+        "404":
+          description: No content
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                title: An error occured while processing your request.
+                status: 500
+                traceId: 9f4284cb-e598-4810-9077-abc0312c1b02
+components:
+  schemas:
+    EftEnrollmentRequest:
+      type: object
+      properties:
+        enrollment:
+          $ref: '#/components/schemas/EftEnrollmentRequest_enrollment'
+    EftEnrollmentResponse:
+      type: object
+      properties:
+        status-cd:
+          type: string
+          description: |
+            3-digit status code (201, 202, 204, 900, 999)
+          example: "202"
+        status-msg:
+          type: string
+          description: "Description for status code:\n\n-201 PAYER ARKANSAS BLUE CROSS BLUE SHIELD - BANKID MISSING          \n-201 PAYER ARKANSAS BLUE CROSS BLUE SHIELD - BANKID NOT VALID        \n-201 PAYER ARKANSAS BLUE CROSS BLUE SHIELD - BANKID NOT NUMERIC      \n-201 PAYER ARKANSAS BLUE CROSS BLUE SHIELD - ACCT NBR MISSING        \n-201 PAYER ARKANSAS BLUE CROSS BLUE SHIELD - ACCT NBR NOT NUMERIC    \n-202 PAYER ARKANSAS BLUE CROSS BLUE SHIELD - ENROLLMENT SUCCESSFUL   \n-204 PAYER ARKANSAS BLUE CROSS BLUE SHIELD - PROVIDER NOT ON FILE    \n-900 UNKNOWN FUNCTION (Expects ‘Add’, ‘Change’ or ‘Cancel’)\n-999 INTERNAL ERROR - CONTACT PROVWEB SUPPORT (This would be some kind of DB2 issue on our side)\n"
+          example: PAYER ARKANSAS BLUE CROSS BLUE SHIELD - ENROLLMENT SUCCESSFUL
+    FeeScheduleResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/FeeScheduleResponse_inner'
+    ValidationErrorResponse:
+      type: object
+      properties:
+        validationErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+    ValidationError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: |
+            Unique code for this validation error.
+            This can be used for message lookup.
+          example: REG-12345
+        message:
+          type: string
+          description: |
+            Error message from the API for reference.
+          example: Example error message.
+        propertyName:
+          type: string
+          description: |
+            Request property, if applicable, that is related
+            to the error.
+          example: firstName
+    ErrorResponse:
+      type: object
+      properties:
+        title:
+          type: string
+          example: An error occured while processing your request.
+        status:
+          type: integer
+          example: 500
+        traceId:
+          type: string
+          description: |
+            Reference id that can be used to trace the error.
+          example: 9f4284cb-e598-4810-9077-abc0312c1b02
+    EftEnrollmentRequest_enrollment_payer:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "00520"
+        name:
+          type: string
+          example: ARKANSAS BCBS
+    EftEnrollmentRequest_enrollment_provider:
+      type: object
+      properties:
+        providerNpi:
+          type: string
+          description: |
+            Provider's NPI number. Internally mapping to "NPI"
+          example: "1231231233"
+        providerTaxId:
+          type: string
+          description: |
+            Provider's tax id number. ABCBS will not use this value internally.
+          example: "3453453455"
+        providerName:
+          type: string
+          description: |
+            Provider's name.
+          example: theprovidername
+    EftEnrollmentRequest_enrollment_contact:
+      type: object
+      properties:
+        name:
+          type: string
+          description: |
+            Provider's name - internally mapping to "ContactName"
+          example: Contact Name
+        street:
+          type: string
+          description: |
+            Provider's street - ABCBS will not use this value internally.
+          example: Contact Street
+        city:
+          type: string
+          description: |
+            Provider's city - ABCBS will not use this value internally.
+          example: Dallas
+        state:
+          type: string
+          description: |
+            Provider's state - ABCBS will not use this value internally.
+          example: TX
+        zpi:
+          type: string
+          description: |
+            Provider's zip code - ABCBS will not use this value internally.
+          example: "75252"
+        phone:
+          type: string
+          description: |
+            Contact's 10-digit phone number - internally mapping to "ContactPhone"
+          example: "5555555555"
+        email:
+          type: string
+          description: |
+            Contact's email address - internally mapping to "ContactEmail"
+          example: me@universe.com
+    EftEnrollmentRequest_enrollment_financialInformation:
+      type: object
+      properties:
+        institutionName:
+          type: string
+          description: |
+            Bank's name - internally mapping to "BankName"
+          example: ACME
+        accountType:
+          type: string
+          description: |
+            Type of banking account (Checking/Savings) - internally mapping to "AccountType"
+          example: Checking
+        routingNumber:
+          type: string
+          description: |
+            Bank's routing number - internally mapping to "BankRoute"
+          example: "123456789"
+        accountNumber:
+          type: string
+          description: |
+            Bank account number - internally mapping to "Account Number"
+    EftEnrollmentRequest_enrollment:
+      type: object
+      properties:
+        registrationId:
+          type: string
+          description: |
+            Registration id number which is assigned by Availity. ABCBS will not use this value internally.
+          example: "1234567"
+        submissionReason:
+          type: string
+          description: |
+            This indicates if the EFT enrollment is new, change, or cancel. Internally mapping to "Activity"
+          example: New
+        customerId:
+          type: string
+          description: |
+            Customer id number from Availity. ABCBS will not use this value internally.
+          example: "1902"
+        transactionType:
+          type: string
+          description: |
+            Type of transaction, should default to EFT. ABCBS will not use this value internally.
+          example: "1902"
+        submittedDate:
+          type: string
+          description: Date of submission
+          example: 2022-08-10
+        medicareCrossoverEnabled:
+          type: string
+          description: |
+            True/false value supplied by Availity. ABCBS will not use this value internally.
+          example: "false"
+        payer:
+          $ref: '#/components/schemas/EftEnrollmentRequest_enrollment_payer'
+        provider:
+          $ref: '#/components/schemas/EftEnrollmentRequest_enrollment_provider'
+        contact:
+          $ref: '#/components/schemas/EftEnrollmentRequest_enrollment_contact'
+        financialInformation:
+          $ref: '#/components/schemas/EftEnrollmentRequest_enrollment_financialInformation'
+    FeeScheduleResponse_inner:
+      type: object
+      properties:
+        procedureCode:
+          type: string
+          description: |
+            Procedure code.
+          example: "10060"
+        description:
+          type: string
+          description: |
+            Description of the procedure code.
+          example: Drainage of skin abscess
+        modifier:
+          type: string
+          description: |
+            Modifier that was applied to the procedure code. Defaults to 00 if no modifier was provided.
+          example: "00"
+        placeOfService:
+          type: string
+          description: |
+            Place of service for the procedure.
+          example: Facility
+        maxAmount:
+          type: string
+          description: |
+            The max amount paid for the service based on the fee schedule.
+          example: "123.41"
+  responses:
+    ValidationErrors:
+      description: Validation errors
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationErrorResponse'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            title: Unauthorized request.
+            status: 401
+            traceId: 9f4284cb-e598-4810-9077-abc0312c1b02
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            title: Forbidden request.
+            status: 403
+            traceId: 9f4284cb-e598-4810-9077-abc0312c1b02
+    NoContent:
+      description: No content
+    Error:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            title: An error occured while processing your request.
+            status: 500
+            traceId: 9f4284cb-e598-4810-9077-abc0312c1b02
